@@ -1,25 +1,55 @@
-import logo from './logo.svg';
+import React from 'react';
 import './App.css';
 
+import { useMoralis,useNFTBalances } from "react-moralis";
+
+
 function App() {
+
+
+  const { logout,authenticate, isAuthenticated, user,isAuthenticating } = useMoralis();
+
+  const { getNFTBalances, data, error, isLoading, isFetching } = useNFTBalances();
+
+  if (!isAuthenticated) {
+    return (
+      <div className="landing">
+        <h1>Display My Page When I Own NFT</h1>
+        <button className="btn-hero" onClick={() => {authenticate();
+          getNFTBalances({ params: { chain: "1443" } });
+          }}>
+          Connect your wallet
+        </button>
+      </div>
+    );
+  }
+
+  if (data.total>0) {
+    return (
+      <div className="landing">
+        <h1>👀  Welcome {user.get("username")}</h1>
+        <div>
+          {error && <>{JSON.stringify(error)}</>}
+          <button onClick={() => getNFTBalances({ params: { chain: "1443" } })}>Refetch NFTBalances</button>
+          <pre>{JSON.stringify(data, null, 2)}</pre>
+        </div>
+        <button onClick={() => logout()} disabled={isAuthenticating}>
+          Logout
+        </button>
+      </div>
+    );
+  }
+  
+  // This is the case where we have the user's address
+  // which means they've connected their wallet to our site!
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <div className="landing">
+      <h1>👀  Welcome {user.get("username")} You Don't Have NFT</h1>
+      <button onClick={() => logout()} disabled={isAuthenticating}>
+      Logout
+    </button>
+    </div>);
+    
 }
 
 export default App;
